@@ -1,0 +1,44 @@
+<launch>
+  
+    <include file = "$(find rtt_ros)/launch/deployer.launch">
+      <arg name="DEPLOYER_ARGS" value = "-s start.ops"/>
+      <arg name="LOG_LEVEL" value="debug"/>
+      <arg name="DEBUG" value="false"/>
+    </include>
+ 
+
+    <node name="urg_node" pkg="urg_node" type="urg_node" output="screen">
+        <rosparam>
+            ip_address: 192.168.0.10
+            frame_id: base_laser
+            publish_multiecho: false
+            angle_min: -0.01
+            angle_max: 0.01
+            skip: 0
+        </rosparam>
+    </node>
+  
+    <node name="scan_filter" pkg="laser_filters" type="scan_to_scan_filter_chain" output="screen">
+        <remap from="scan" to="scan"/>
+        <remap from="scan_filtered" to="scan_filtered"/>
+        <rosparam>
+            scan_filter_chain:
+            - type: laser_filters/LaserArrayFilter
+              name: laser_median_filter
+              params: 
+                range_filter_chain:
+                  - name: median_5
+                    type: filters/MultiChannelMedianFilterFloat 
+                    params:
+                      number_of_observations: 5
+                      unused: 10
+                intensity_filter_chain:
+                  - name: median_5
+                    type: filters/MultiChannelMedianFilterFloat 
+                    params:
+                      number_of_observations: 5
+                      unused: 10
+        </rosparam>
+    </node>
+
+</launch>
